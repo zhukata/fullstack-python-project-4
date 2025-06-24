@@ -21,7 +21,7 @@ program
     const outputDir = typeof options.output === 'string' ? options.output : __dirname
 
     pageLoader(link, outputDir)
-      .then((resultPath) => console.log(resultPath))
+      .then(resultPath => console.log(resultPath))
       .catch((err) => {
         console.error(`Error: ${err.message}`)
         process.exit(1)

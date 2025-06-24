@@ -4,6 +4,9 @@
   "description": "[![Actions Status](https://github.com/zhukata/fullstack-python-project-4/actions/workflows/hexlet-check.yml/badge.svg)](https://github.com/zhukata/fullstack-python-project-4/actions)",
   "main": "src/index.js",
   "type": "module",
+  "jest": {
+    "testEnvironment": "node"
+  },
   "bin": {
     "page-loader": "bin/page-loader.js"
   },
@@ -22,6 +25,15 @@
   "homepage": "https://github.com/zhukata/fullstack-python-project-4#readme",
   "dependencies": {
     "axios": "^1.10.0",
-    "commander": "^14.0.0"
+    "commander": "^14.0.0",
+    "jest": "^30.0.2",
+    "nock": "^14.0.5"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.29.0",
+    "@stylistic/eslint-plugin": "^5.0.0",
+    "eslint": "^9.29.0",
+    "eslint-plugin-jest": "^29.0.1",
+    "globals": "^16.2.0"
   }
 }

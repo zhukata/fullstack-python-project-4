@@ -24,14 +24,30 @@ export const extractAssets = (html, baseUrl) => {
   return assets
 }
 
-export const rewriteAssetLinks = (html, assetMap) => {
+export const rewriteAssetLinks = (html, assetMap, baseUrl) => {
   const $ = cheerio.load(html)
 
   for (const [url, localPath] of assetMap.entries()) {
-    const relative = path.basename(localPath)
-    $(`[src='${url}'], [href='${url}']`).each((_, el) => {
-      if (el.attribs.src === url) el.attribs.src = relative
-      if (el.attribs.href === url) el.attribs.href = relative
+    const relativeDir = path.basename(path.dirname(localPath))
+    const fileName = path.basename(localPath)
+    const finalPath = path.join(relativeDir, fileName)
+
+    $('[src], [href]').each((_, el) => {
+      const attr = el.attribs.src ? 'src' : 'href'
+      const original = el.attribs[attr]
+      if (!original) return
+
+      let resolved
+      try {
+        resolved = new URL(original, baseUrl).toString()
+      }
+      catch {
+        return
+      }
+
+      if (resolved === url) {
+        el.attribs[attr] = finalPath
+      }
     })
   }
 

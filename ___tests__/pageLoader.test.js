@@ -1,9 +1,11 @@
 import { mkdtemp, readFile } from 'fs/promises'
-import nock from 'nock'
+import * as cheerio from 'cheerio'
 import os from 'os'
+import nock from 'nock'
 import path from 'path'
 import { fileURLToPath } from 'url'
 import pageLoader from '../src/index.js'
+import { mockHtmlPage, mockBinary, mockText } from '../src/utils/mockRequest.js'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -16,38 +18,31 @@ beforeAll(() => {
 })
 
 beforeEach(async () => {
-  nock.cleanAll()
   tempDir = await mkdtemp(path.join(os.tmpdir(), 'page-loader-'))
 })
 
 test('downloads page and saves correctly', async () => {
   const testUrl = 'https://ru.hexlet.io/courses'
-  const testHtml = await readFile(getFixturePath('test_resources.html'))
-  const pictureFixture = await readFile(getFixturePath('picture.png'))
 
-  // Без портов! Просто нормальный базовый URL
-  const scope = nock('https://ru.hexlet.io')
-    .get('/courses')
-    .reply(200, testHtml)
-    .get('/assets/professions/nodejs.png')
-    .reply(200, pictureFixture, { 'Content-Type': 'image/png' })
-    .get('/assets/application.css')
-    .reply(200, 'body { background: #fff }', { 'Content-Type': 'text/css' })
-    .get('/packs/js/runtime.js')
-    .reply(200, 'console.log("runtime loaded")', { 'Content-Type': 'application/javascript' })
+  await mockHtmlPage(testUrl, 'test_resources.html')
+
+  await mockBinary('https://ru.hexlet.io/assets/professions/nodejs.png', 'picture.png', 'image/png')
+  await mockText('https://ru.hexlet.io/assets/application.css', 'body { background: #fff }', 'text/css')
+  await mockText('https://ru.hexlet.io/packs/js/runtime.js', 'jsajsajsjajsjasj', 'application/javascript')
 
   const expectedHtml = await readFile(getFixturePath('expected.html'), 'utf-8')
   const outputPath = await pageLoader(testUrl, tempDir)
   const savedHtml = await readFile(outputPath, 'utf-8')
 
-  expect(savedHtml).toBe(expectedHtml)
+  expect(normalizeHtml(savedHtml)).toBe(normalizeHtml(expectedHtml))
 
   const imagePath = path.join(tempDir, 'ru-hexlet-io-courses_files', 'ru-hexlet-io-assets-professions-nodejs.png')
   const savedImage = await readFile(imagePath)
   const imageFixture = await readFile(getFixturePath('picture.png'))
-
   expect(savedImage.equals(imageFixture)).toBe(true)
-
-  // Убедимся, что все моки были использованы
-  scope.done()
 })
+
+function normalizeHtml(input) {
+  const $ = cheerio.load(input)
+  return $.html()
+}

@@ -12,3 +12,6 @@ link:
 
 test:
 	node --experimental-vm-modules node_modules/.bin/jest
+
+log:
+	DEBUG=page-loader:* make test

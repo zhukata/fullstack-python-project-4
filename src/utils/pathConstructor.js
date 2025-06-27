@@ -1,17 +1,18 @@
 import path from 'path'
+import { logPath } from './logger.js'
 
-export default (url, dirname, extension) => {
-  const fullUrl = `${url.host}${url.pathname}`
-  const normalized = fullUrl
+export default (url, extension = 'html') => {
+  const { hostname, pathname } = url
+  const slug = `${hostname}${pathname}`
     .replace(/[^a-zA-Z0-9]/g, '-')
     .replace(/-+/g, '-')
     .replace(/(^-|-$)/g, '')
 
-  const newDirName = `${normalized}_files`
-  const fileName = `${normalized}.${extension}`
+  const ext = path.extname(pathname) || `.${extension}`
+  const fileName = slug.replace(new RegExp(`${ext}$`), '') + ext
 
-  const newDirPath = path.join(dirname, newDirName)
-  const fullPath = path.join(newDirPath, fileName)
+  logPath(`🔧 URL: ${url.toString()}`)
+  logPath(`📄 File: ${fileName}`)
 
-  return { newDirPath, fullPath }
+  return fileName
 }

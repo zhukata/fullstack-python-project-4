@@ -1,58 +1,53 @@
+import { mkdtemp, readFile } from 'fs/promises'
+import nock from 'nock'
 import os from 'os'
 import path from 'path'
 import { fileURLToPath } from 'url'
-import { mkdtemp, readFile } from 'fs/promises'
-import nock from 'nock'
-import { pageLoader, pictureLoader } from '../src/index.js'
+import pageLoader from '../src/index.js'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 const getFixturePath = name => path.join(__dirname, '..', '__fixtures__', name)
 
-const testUrl = 'https://ru.hexlet.io/courses'
-const testHTML = await readFile(getFixturePath('test.html'), 'utf-8')
-
 let tempDir
 
-beforeEach(async () => {
-  tempDir = await mkdtemp(path.join(os.tmpdir(), 'page-loader-'))
-})
-
-beforeAll(async () => {
+beforeAll(() => {
   nock.disableNetConnect()
 })
 
-test('downloads page and saves correctly', async () => {
-  const scope = nock('https://ru.hexlet.io')
-    .get('/courses')
-    .reply(200, testHTML)
-
-  const outputPath = await pageLoader(testUrl, tempDir)
-  const expectedPath = path.join(tempDir, 'ru-hexlet-io-courses_files/ru-hexlet-io-courses.html')
-
-  expect(outputPath).toBe(expectedPath)
-
-  const savedContent = await readFile(expectedPath, 'utf-8')
-  expect(savedContent).toBe(testHTML)
+beforeEach(async () => {
+  nock.cleanAll()
+  tempDir = await mkdtemp(path.join(os.tmpdir(), 'page-loader-'))
 })
 
-test('downloads picture and saves it correctly', async () => {
-  const binaryFixture = await readFile(getFixturePath('picture.png'))
+test('downloads page and saves correctly', async () => {
+  const testUrl = 'https://ru.hexlet.io/courses'
+  const testHtml = await readFile(getFixturePath('test_resources.html'))
+  const pictureFixture = await readFile(getFixturePath('picture.png'))
 
-  // Имитация HTML с <img>
-  nock('https://ru.hexlet.io')
+  // Без портов! Просто нормальный базовый URL
+  const scope = nock('https://ru.hexlet.io')
     .get('/courses')
-    .reply(200, '<img src="/assets/professions/nodejs.png">')
-
-  // Имитация самой картинки
-  nock('https://ru.hexlet.io')
+    .reply(200, testHtml)
     .get('/assets/professions/nodejs.png')
-    .reply(200, binaryFixture, {
-      'Content-Type': 'image/png',
-    })
+    .reply(200, pictureFixture, { 'Content-Type': 'image/png' })
+    .get('/assets/application.css')
+    .reply(200, 'body { background: #fff }', { 'Content-Type': 'text/css' })
+    .get('/packs/js/runtime.js')
+    .reply(200, 'console.log("runtime loaded")', { 'Content-Type': 'application/javascript' })
 
-  const savedPicturePath = await pictureLoader(testUrl, tempDir)
-  const savedBuffer = await readFile(savedPicturePath)
+  const expectedHtml = await readFile(getFixturePath('expected.html'), 'utf-8')
+  const outputPath = await pageLoader(testUrl, tempDir)
+  const savedHtml = await readFile(outputPath, 'utf-8')
 
-  expect(savedBuffer.equals(binaryFixture)).toBe(true)
+  expect(savedHtml).toBe(expectedHtml)
+
+  const imagePath = path.join(tempDir, 'ru-hexlet-io-courses_files', 'ru-hexlet-io-assets-professions-nodejs.png')
+  const savedImage = await readFile(imagePath)
+  const imageFixture = await readFile(getFixturePath('picture.png'))
+
+  expect(savedImage.equals(imageFixture)).toBe(true)
+
+  // Убедимся, что все моки были использованы
+  scope.done()
 })

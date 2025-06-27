@@ -20,6 +20,7 @@ client.interceptors.response.use((response) => {
 })
 
 export const loadHtml = (url) => {
+  logAxios(`📡 axios.get → ${url}`)
   return client.get(url)
     .then(res => ({
       html: res.data,
@@ -34,8 +35,8 @@ export const downloadAssets = (assets, resourcesDir) => {
     const name = pathConstructor(new URL(url))
     const filePath = path.join(resourcesDir, name)
     assetMap.set(url, filePath)
-
-    return axios.get(url, { responseType: 'arraybuffer' })
+    logAxios(`📡 axios.get → ${url}`)
+    return client.get(url, { responseType: 'arraybuffer' })
       .then(res => fsp.writeFile(filePath, res.data))
       .then(() => logAxios(`📦 Saved ${url} → ${filePath}`))
       .catch(err => logAxios(`❌ Failed to download ${url}: ${err.message}`))

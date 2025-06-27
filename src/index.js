@@ -6,6 +6,7 @@ import pathConstructor from './utils/pathConstructor.js'
 import { loadHtml, downloadAssets } from './loaders.js'
 import { extractAssets, rewriteAssetLinks } from './parsers.js'
 import { logPath } from './utils/logger.js'
+import { buildErrorMessage } from './utils/errors.js'
 
 export default (url, outputDir) => {
   const pageUrl = new URL(url)
@@ -25,5 +26,9 @@ export default (url, outputDir) => {
         const updated = rewriteAssetLinks(html, assetMap, origin)
         return fsp.writeFile(htmlPath, updated).then(() => htmlPath)
       })
+    })
+    .catch((err) => {
+      const msg = buildErrorMessage(err, url)
+      throw new Error(msg)
     })
 }

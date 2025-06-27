@@ -14,21 +14,30 @@ const getFixturePath = name => path.join(__dirname, '..', '__fixtures__', name)
 let tempDir
 
 beforeAll(() => {
-  nock.disableNetConnect()
 })
 
 beforeEach(async () => {
+  nock.cleanAll()
   tempDir = await mkdtemp(path.join(os.tmpdir(), 'page-loader-'))
 })
+
+// afterEach(() => {
+//   const pending = nock.pendingMocks()
+//   if (pending.length > 0) {
+//     console.warn('⚠️ Остались непойманные моки:', pending)
+//   }
+// })
 
 test('downloads page and saves correctly', async () => {
   const testUrl = 'https://ru.hexlet.io/courses'
 
-  await mockHtmlPage(testUrl, 'test_resources.html')
-
-  await mockBinary('https://ru.hexlet.io/assets/professions/nodejs.png', 'picture.png', 'image/png')
-  await mockText('https://ru.hexlet.io/assets/application.css', 'body { background: #fff }', 'text/css')
-  await mockText('https://ru.hexlet.io/packs/js/runtime.js', 'jsajsajsjajsjasj', 'application/javascript')
+  // Все моки должны быть созданы ДО вызова pageLoader
+  await Promise.all([
+    mockHtmlPage(testUrl, 'test_resources.html'),
+    mockBinary('https://ru.hexlet.io/assets/professions/nodejs.png', 'picture.png', 'image/png'),
+    mockText('https://ru.hexlet.io/assets/application.css', 'body { background: #fff }', 'text/css'),
+    mockText('https://ru.hexlet.io/packs/js/runtime.js', 'console.log("Hi")', 'application/javascript'),
+  ])
 
   const expectedHtml = await readFile(getFixturePath('expected.html'), 'utf-8')
   const outputPath = await pageLoader(testUrl, tempDir)

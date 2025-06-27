@@ -2,6 +2,7 @@
 import { Command } from 'commander'
 import { dirname } from 'path'
 import { fileURLToPath } from 'url'
+import { buildErrorMessage } from '../src/utils/errors.js'
 
 import pageLoader from '../src/index.js'
 
@@ -23,7 +24,8 @@ program
     pageLoader(link, outputDir)
       .then(resultPath => console.log(resultPath))
       .catch((err) => {
-        console.error(`Error: ${err.message}`)
+        const msg = buildErrorMessage(err, link)
+        console.error(`❌ ${msg}`)
         process.exit(1)
       })
   })

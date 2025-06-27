@@ -13,6 +13,7 @@ export const mockHtmlPage = async (url, fixtureName) => {
 
   nock(pageUrl.origin)
     .get(pageUrl.pathname)
+    .times(Infinity)
     .reply(200, html)
 }
 

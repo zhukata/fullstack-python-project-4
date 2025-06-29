@@ -7,7 +7,7 @@ import { loadHtml, downloadAssets } from './loaders.js'
 import { extractAssets, rewriteAssetLinks } from './parsers.js'
 import { logPath, logFlow } from './utils/logger.js'
 
-export default (url, outputDir) => {
+export default (url, outputDir = process.cwd()) => {
   const pageUrl = new URL(url)
   const dirName = pathConstructor(pageUrl, 'html').replace(/\.html$/, '_files')
   const resourcesDir = path.join(outputDir, dirName)

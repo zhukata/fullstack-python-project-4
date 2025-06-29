@@ -12,7 +12,7 @@
 ### Utility setup
 1. Clone the repo with the following command:
 ```bash
-git clone 
+git clone https://github.com/zhukata/fullstack-python-project-4.git
 ```
 2. Enter the root directory of the package with the command:
 ```bash
@@ -20,11 +20,16 @@ cd fullstack-python-project-4
 ```
 3. Install the necessary dependencies with the command:
 ```bash
-npm ci
+make install
 ```
 4. Create a symbolic link to the package in order to make the utility to run from any directory of the system using the command: 
 ```bash
-npm link
+make link
+```
+
+5. You can run tests with the command:
+```bash
+make test
 ```
 
 ### Usage

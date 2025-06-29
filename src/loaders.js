@@ -60,7 +60,7 @@ export const downloadAssets = async (assets, resourcesDir) => {
     exitOnError: false,
   })
 
-  await listr.run()
+  await listr.run().catch(() => {})
 
   return assetMap
 }

@@ -6,7 +6,6 @@ import pathConstructor from './utils/pathConstructor.js'
 import { loadHtml, downloadAssets } from './loaders.js'
 import { extractAssets, rewriteAssetLinks } from './parsers.js'
 import { logPath, logFlow } from './utils/logger.js'
-import { buildErrorMessage } from './utils/errors.js'
 
 export default (url, outputDir) => {
   const pageUrl = new URL(url)
@@ -15,22 +14,28 @@ export default (url, outputDir) => {
   const htmlFileName = pathConstructor(pageUrl, 'html')
   const htmlPath = path.join(outputDir, dirName, htmlFileName)
 
-  logPath(`📁 Directory: ${resourcesDir}`)
-  logPath(`📄 File: ${htmlPath}`)
-  logFlow('Starting...')
-  return fsp.mkdir(resourcesDir, { recursive: true })
+  logFlow('🔍 Проверка директории')
+  return fsp.access(outputDir, fsp.constants.F_OK)
+    .then(() => {
+      logPath(`📁 Output directory доступна: ${outputDir}`)
+      logPath(`📁 Resources directory: ${resourcesDir}`)
+      logPath(`📄 HTML output file: ${htmlPath}`)
+      logFlow('🚀 Начинаем загрузку страницы...')
+      return fsp.mkdir(resourcesDir, { recursive: true })
+    })
     .then(() => loadHtml(url))
     .then(({ html, origin }) => {
-      logFlow('Html has been received')
-
+      logFlow('✅ HTML загружен')
       const assets = extractAssets(html, origin)
-      return downloadAssets(assets, resourcesDir, pageUrl).then((assetMap) => {
-        const updated = rewriteAssetLinks(html, assetMap, origin)
-        return fsp.writeFile(htmlPath, updated).then(() => htmlPath)
-      })
-    })
-    .catch((err) => {
-      const msg = buildErrorMessage(err, url)
-      throw new Error(msg)
+      logFlow(`🔗 Найдено ресурсов: ${assets.length}`)
+      return downloadAssets(assets, resourcesDir, pageUrl)
+        .then((assetMap) => {
+          logFlow(`💾 Скачано файлов: ${assetMap.size}`)
+          const updatedHtml = rewriteAssetLinks(html, assetMap, origin)
+          return fsp.writeFile(htmlPath, updatedHtml).then(() => {
+            logFlow('📝 HTML сохранён с локальными путями')
+            return htmlPath
+          })
+        })
     })
 }

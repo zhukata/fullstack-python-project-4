@@ -1,21 +1,21 @@
-export const buildErrorMessage = (err, url) => {
-  if (err.isAxiosError) {
-    if (err.response) {
-      return `Не удалось загрузить ${url} (код ${err.response.status})`
+import { AxiosError } from 'axios'
+
+export default (error) => {
+  if (error.name === 'Error') {
+    console.error(`System error: ${error.message}`)
+  }
+  else if (error instanceof AxiosError) {
+    if (error.response && error.response.status !== 200) {
+      console.error(`Axios error: The request was made and the server responded with a status code ${error.response.status}`)
     }
-    if (err.code === 'ENOTFOUND') {
-      return `Хост не найден: ${url}`
+    else if (error.request) {
+      console.error('Axios error: The request was made but no response was received')
     }
-    return `Сетевая ошибка при обращении к ${url}: ${err.message}`
+    else {
+      console.error('Axios error: Something happened in setting up the request that triggered an error')
+    }
   }
-
-  if (err.code === 'EACCES') {
-    return `Недостаточно прав для записи в директорию`
+  else {
+    console.error(`Unknown error: ${error.message}`)
   }
-
-  if (err.code === 'ENOENT') {
-    return `Выбранная директория не существует`
-  }
-
-  return `Произошла ошибка: ${err.message}`
 }

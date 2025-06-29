@@ -12,7 +12,7 @@ export default (url, outputDir) => {
   const dirName = pathConstructor(pageUrl, 'html').replace(/\.html$/, '_files')
   const resourcesDir = path.join(outputDir, dirName)
   const htmlFileName = pathConstructor(pageUrl, 'html')
-  const htmlPath = path.join(outputDir, dirName, htmlFileName)
+  const htmlPath = path.join(outputDir, htmlFileName)
 
   logFlow('🔍 Проверка директории')
   return fsp.access(outputDir, fsp.constants.F_OK)

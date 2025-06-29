@@ -22,7 +22,6 @@ client.interceptors.response.use((response) => {
 })
 
 export const loadHtml = (url) => {
-  logAxios(`📡 axios.get → ${url}`)
   return client.get(url)
     .then(res => ({
       html: res.data,

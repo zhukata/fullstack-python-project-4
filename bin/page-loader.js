@@ -16,10 +16,12 @@ program
   .description('Page loader utility')
   .version('1.0.0', '-V, --version', 'output the version number')
   .helpOption('-h, --help', 'display help for command')
-  .option('-o, --output [dir]', 'output dir (default: current directory)', __dirname)
+  .option('-o, --output [dir]', 'output dir (default: current directory)')
   .argument('<link>', 'URL of the page to download')
   .action((link, options) => {
-    const outputDir = typeof options.output === 'string' ? options.output : __dirname
+    const outputDir = typeof options.output === 'string'
+      ? options.output
+      : process.cwd()
 
     pageLoader(link, outputDir)
       .then(resultPath => console.log(resultPath))

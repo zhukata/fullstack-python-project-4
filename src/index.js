@@ -5,7 +5,7 @@ import path from 'path'
 import pathConstructor from './utils/pathConstructor.js'
 import { loadHtml, downloadAssets } from './loaders.js'
 import { extractAssets, rewriteAssetLinks } from './parsers.js'
-import { logPath } from './utils/logger.js'
+import { logPath, logFlow } from './utils/logger.js'
 import { buildErrorMessage } from './utils/errors.js'
 
 export default (url, outputDir) => {
@@ -17,12 +17,14 @@ export default (url, outputDir) => {
 
   logPath(`📁 Directory: ${resourcesDir}`)
   logPath(`📄 File: ${htmlPath}`)
-
+  logFlow('Starting...')
   return fsp.mkdir(resourcesDir, { recursive: true })
     .then(() => loadHtml(url))
     .then(({ html, origin }) => {
+      logFlow('Html has been received')
+
       const assets = extractAssets(html, origin)
-      return downloadAssets(assets, resourcesDir).then((assetMap) => {
+      return downloadAssets(assets, resourcesDir, pageUrl).then((assetMap) => {
         const updated = rewriteAssetLinks(html, assetMap, origin)
         return fsp.writeFile(htmlPath, updated).then(() => htmlPath)
       })

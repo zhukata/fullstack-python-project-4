@@ -1,6 +1,8 @@
 import axios from 'axios'
 import fsp from 'fs/promises'
 import path from 'path'
+import Listr from 'listr'
+
 import pathConstructor from './utils/pathConstructor.js'
 import { logAxios } from './utils/logger.js'
 
@@ -28,19 +30,37 @@ export const loadHtml = (url) => {
     }))
 }
 
-export const downloadAssets = (assets, resourcesDir) => {
+export const downloadAssets = async (assets, resourcesDir) => {
   const assetMap = new Map()
 
   const tasks = assets.map(({ url }) => {
     const name = pathConstructor(new URL(url))
     const filePath = path.join(resourcesDir, name)
     assetMap.set(url, filePath)
-    logAxios(`📡 axios.get → ${url}`)
-    return client.get(url, { responseType: 'arraybuffer' })
-      .then(res => fsp.writeFile(filePath, res.data))
-      .then(() => logAxios(`📦 Saved ${url} → ${filePath}`))
-      .catch(err => logAxios(`❌ Failed to download ${url}: ${err.message}`))
+
+    return {
+      title: `${url}`,
+      task: async (_, task) => {
+        try {
+          logAxios(`📡 axios.get → ${url}`)
+          const response = await client.get(url, { responseType: 'arraybuffer' })
+          await fsp.writeFile(filePath, response.data)
+          logAxios(`📦 Saved ${url} → ${filePath}`)
+        }
+        catch (error) {
+          task.title = `❌ Failed: ${url}`
+          throw new Error(`Download error: ${error.message}`)
+        }
+      },
+    }
   })
 
-  return Promise.all(tasks).then(() => assetMap)
+  const listr = new Listr(tasks, {
+    concurrent: true,
+    exitOnError: false,
+  })
+
+  await listr.run()
+
+  return assetMap
 }
